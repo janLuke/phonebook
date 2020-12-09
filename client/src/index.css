@@ -1,0 +1,238 @@
+:root {
+  --primary-color: rgb(75, 123, 255);
+}
+
+*, *:before, *:after {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f2f2f2;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  margin: 4px 0;
+  outline: none;
+  border: 0;
+  border-radius: 5px;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  box-shadow: 2px 2px 5px 0 rgba(0, 0, 0, 0.2);
+  transition: all .3s;
+}
+
+button:hover {
+  box-shadow: 2px 2px 8px 2px rgba(0, 0, 0, 0.2);
+    /* inset 0 0 100px 100px rgba(43, 43, 43, 0.1); */
+    transition: all .3s;
+}
+
+button:active {
+  box-shadow: inset 0 0 100px 100px rgba(0, 0, 0, 0.2);
+}
+
+button:focus {
+  outline: none;
+}
+
+button:disabled {
+  box-shadow: none;
+  background-color: rgb(140, 177, 255);
+  cursor: default;
+}
+
+button:disabled:active, button:disabled:hover {
+  box-shadow: none;
+}
+
+input:focus {
+  border: 1px solid var(--primary-color);
+}
+
+input.in-error {
+  border: 2px solid red;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0 0;
+  padding: 0;
+  border-radius: 10px;
+}
+
+input {
+  border-radius: 3px;
+  outline: none;
+  border: 1px solid rgb(170, 170, 170);
+  padding: 8px 10px;
+}
+
+
+.App {
+  margin: 0 auto;
+  padding: 0;
+}
+
+.header {
+  margin: 12px 0 20px;
+  text-align: center;
+  font-family: "Lobster", "Roboto", 'sans-serif';
+  color: var(--primary-color);
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.Panel {
+  background: white;
+  margin: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid lightgray;
+  /* box-shadow: 0 0 5px 2px rgba(0, 0, 0, 0.05); */
+}
+
+.add-item-panel {
+  flex: 1 2 15em;
+  max-width: 20em;
+}
+
+.contact-list-panel {
+  flex: 2 0 20em;
+  max-width: 30em;
+}
+
+.ContactForm {
+  max-width: 30em;
+}
+
+.FormField {
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.FormField input {
+  width: 100%;
+}
+
+.FormField__label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: .9em;
+}
+
+.FormField__error {
+  display: block;
+  margin: 2px 0;
+  color: red;
+  font-size: .9em;
+  text-overflow: wrap;
+}
+
+.ContactForm__update-btn {
+  background-color:rgb(255, 81, 0);
+}
+
+.ContactForm__update-btn:disabled {
+  background-color: rgb(255, 157, 111);
+}
+
+.ContactListWithFilter__header {
+  padding: 12px 0;
+  text-align: center;
+}
+
+.ContactList {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.ContactList--empty {
+  text-align: center;
+}
+
+.ContactItem {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  padding: 12px 8px;
+  border-top: 1px solid rgb(218, 218, 218);
+  /* overflow: hidden; */
+}
+
+.ContactItem__info {
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.ContactItem__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ContactItem__phone {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--primary-color);
+}
+
+.IconButton {
+  font-size: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0 5px;
+  color: rgb(182, 182, 182);
+  transition: transform .2s;
+  box-shadow: none;
+}
+
+.IconButton:hover {
+  box-shadow: none;
+  color: var(--primary-color);
+}
+
+.IconButton:active {
+  box-shadow: none;
+}
+
+.IconButton--red:hover {
+  color: rgb(240, 0, 0);
+}
+
+.IconButton--green:hover {
+  color:rgb(0, 182, 0);
+}
+
+.ContactItem__buttons {
+  flex: 0 0 auto;
+  display: flex;
+  font-size: 16px;
+}

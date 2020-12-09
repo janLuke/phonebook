@@ -1,0 +1,39 @@
+{
+  "contacts": [
+    {
+      "name": "Alan Turing",
+      "phoneNumber": "54-65-654234",
+      "id": 5
+    },
+    {
+      "name": "Donald Knuth",
+      "phoneNumber": "23-34-123234",
+      "id": 6
+    },
+    {
+      "name": "Friedrich Chopin",
+      "phoneNumber": "12-34-123345",
+      "id": 8
+    },
+    {
+      "name": "Carl Friedrich Gauss",
+      "phoneNumber": "32-43-654765",
+      "id": 9
+    },
+    {
+      "name": "Galileo Galilei",
+      "phoneNumber": "12-43-123432",
+      "id": 12
+    },
+    {
+      "name": "Robert Tarjan",
+      "phoneNumber": "32-54-123543",
+      "id": 13
+    },
+    {
+      "name": "John Hopcroft",
+      "phoneNumber": "65-34-123765",
+      "id": 14
+    }
+  ]
+}
