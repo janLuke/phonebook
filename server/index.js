@@ -1,4 +1,5 @@
-const express = require('express');
+const express = require('express')
+const morgan = require('morgan')
 const data = require('./data.js')
 const {
    parseId, badRequest, forbidden,
@@ -11,6 +12,10 @@ let contacts = data.contacts;
 
 app = express()
 app.use(express.json())
+
+// FIXME: remove the body from logging (asked by the exercise)
+morgan.token('body', (req, resp) => JSON.stringify(req.body))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms - :body'))
 
 app.get('/info', (req, resp) => {
    let now = new Date()
