@@ -1,5 +1,6 @@
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 const data = require('./data.js')
 const {
    parseId, badRequest, forbidden,
@@ -11,6 +12,7 @@ const PORT = 3001
 let contacts = data.contacts;
 
 app = express()
+app.use(cors())
 app.use(express.json())
 
 // FIXME: remove the body from logging (asked by the exercise)
