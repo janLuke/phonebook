@@ -1,0 +1,35 @@
+{
+  "name": "phonebook",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "install": "npm run install:client && npm run install:server",
+    "dev:client": "cd client && npm start",
+    "dev:server": "cd server && npm run dev",
+    "dev": "start npm run dev:server && start npm run dev:client",
+    "build:client": "cd client && npm run build",
+    "copy-build": "shx rm -rf server/static && shx cp -r client/build server/static",
+    "build": "npm run build:client && npm run copy-build",
+    "deploy": "git subtree push --prefix server heroku main",
+    "deploy:local": "cd server && heroku local",
+    "build-deploy": "npm run build && npm run deploy",
+    "logs:prod": "heroku logs --tail"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janLuke/phonebook.git"
+  },
+  "author": "Gianluca Gippetto",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/janLuke/phonebook/issues"
+  },
+  "homepage": "https://github.com/janLuke/phonebook#readme",
+  "devDependencies": {
+    "heroku": "^7.47.4",
+    "shx": "^0.3.3"
+  }
+}

@@ -8,7 +8,7 @@ const {
    generateId
 } = require('./util.js')
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 let contacts = data.contacts;
 
 app = express()
@@ -18,6 +18,7 @@ app.use(express.json())
 // FIXME: remove the body from logging (asked by the exercise)
 morgan.token('body', (req, resp) => JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms - :body'))
+app.use(express.static('static'))
 
 app.get('/info', (req, resp) => {
    let now = new Date()
