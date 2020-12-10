@@ -1,11 +1,16 @@
-const express = require('express')
+const express = require('express');
 const data = require('./data.js')
-const { parseId, badRequest } = require('./util.js')
+const {
+   parseId, badRequest, forbidden,
+   validatePhoneNumber,
+   generateId
+} = require('./util.js')
 
 const PORT = 3001
 let contacts = data.contacts;
 
 app = express()
+app.use(express.json())
 
 app.get('/info', (req, resp) => {
    let now = new Date()
@@ -42,6 +47,34 @@ app.delete('/api/contacts/:id', (req, resp) => {
       return resp.status(404).end()
    }
 })
+
+app.post('/api/contacts/', (req, resp) => {
+   let contact = req.body;
+
+   // Check mandatory arguments are not empty
+   if (!contact.name)
+      return badRequest(resp, 'Empty name')
+   if (!contact.phoneNumber)
+      return badRequest(resp, 'Empty phone number')
+
+   // Validate phone number
+   contact.phoneNumber = contact.phoneNumber.trim()
+   let error = validatePhoneNumber(contact.phoneNumber)
+   if (error)
+      return badRequest(resp, error)
+
+   // Validate name
+   contact.name = contact.name.trim()
+   let lowerName = contact.name.toLowerCase()
+   if (contacts.some(c => c.name.toLowerCase() === lowerName))
+      return forbidden(resp, `The name "${contact.name}" already exists`)
+
+   // Store new contact with a generated ID
+   contact.id = generateId()
+   contacts.push(contact)
+   resp.json(contact)
+})
+
 
 app.listen(PORT, () => {
    console.log(`Server listening on port ${PORT}`);
