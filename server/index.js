@@ -1,21 +1,48 @@
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
-const data = require('./data.js')
-const {
-   parseId, badRequest, forbidden,
-   validatePhoneNumber,
-   generateId
-} = require('./util.js')
+
+const yup = require('yup');
+const { expressYupMiddleware: yupMiddleware } = require('express-yup-middleware')
+
+const data = require('./data')
+const { generateContactId, forbidden } = require('./util')
+const { contactSchema } = require('./validation')
+
 
 const PORT = process.env.PORT || 3001
 let contacts = data.contacts;
+
+const contactValidator = {
+   schema: {
+      body: {
+         yupSchema: contactSchema,
+      },
+      params: {
+         yupSchema: yup.object().shape({
+            id: yup.number().positive().integer(),
+         }),
+      },
+   },
+}
+
+const validateContact = (...propertiesToValidate) => yupMiddleware({
+   schemaValidator: contactValidator,
+   propertiesToValidate
+})
+
+const sanitizeContact = (req, resp, next) => {
+   req.body.name = req.body.name.trim()
+   req.body.phoneNumber = req.body.phoneNumber.trim()
+   next()
+}
+
 
 app = express()
 app.use(cors())
 app.use(express.json())
 
-// FIXME: remove the body from logging (asked by the exercise)
+// FIXME: remove the body from logging (it was asked by an exercise)
 morgan.token('body', (req, resp) => JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms - :body'))
 app.use(express.static('static'))
@@ -29,58 +56,58 @@ app.get('/info', (req, resp) => {
 })
 
 app.get('/api/contacts', (req, resp) => {
-   resp.json(contacts);
+   resp.json(contacts)
 })
 
-app.get('/api/contacts/:id', (req, resp) => {
-   const [id, error] = parseId(req.params.id)
-   if (error)
-      return badRequest(resp, error)
-   let contact = contacts.find(c => c.id === id)
-   if (contact != null)
-      return resp.json(contact)
-   else
-      return resp.status(404).end()
-})
+app.route('/api/contacts/:id')
+   .all(validateContact('params'), (req, resp, next) => {
+      const id = parseInt(req.params.id)
+      req.params.id = id
+      let contactIndex = contacts.findIndex(c => c.id === id)
+      console.log(contactIndex);
+      if (contactIndex < 0) {
+         return resp.status(404).end()
+      }
+      req.contactIndex = contactIndex
+      next()
+   })
+   .get((req, resp) => {
+      const contact = contacts[req.contactIndex]
+      if (contact != null)
+         resp.json(contact)
+      else
+         resp.status(404).end()
+   })
+   .delete((req, resp) => {
+      contacts.splice(req.contactIndex, 1)
+      resp.status(204).end()
+   })
+   .put([
+      validateContact('body'),
+      sanitizeContact
+   ], (req, resp) => {
+      let contact = contacts[req.contactIndex]
+      contact.name = req.body.name
+      contact.phoneNumber = req.body.phoneNumber
+      resp.json(contact)
+   })
 
-app.delete('/api/contacts/:id', (req, resp) => {
-   const [id, error] = parseId(req.params.id)
-   if (error)
-      return badRequest(resp, error)
-   let index = contacts.findIndex(c => c.id === id)
-   if (index >= 0) {
-      contacts = contacts.filter(c => c.id !== id)
-      return resp.status(204).end()
-   } else {
-      return resp.status(404).end()
-   }
-})
 
-app.post('/api/contacts/', (req, resp) => {
+app.post('/api/contacts/', [
+   validateContact('body'),
+   sanitizeContact
+], (req, resp) => {
    let contact = req.body;
 
-   // Check mandatory arguments are not empty
-   if (!contact.name)
-      return badRequest(resp, 'Empty name')
-   if (!contact.phoneNumber)
-      return badRequest(resp, 'Empty phone number')
-
-   // Validate phone number
-   contact.phoneNumber = contact.phoneNumber.trim()
-   let error = validatePhoneNumber(contact.phoneNumber)
-   if (error)
-      return badRequest(resp, error)
-
-   // Validate name
-   contact.name = contact.name.trim()
+   // Ensure the name doesn't already exist
    let lowerName = contact.name.toLowerCase()
    if (contacts.some(c => c.name.toLowerCase() === lowerName))
       return forbidden(resp, `The name "${contact.name}" already exists`)
 
    // Store new contact with a generated ID
-   contact.id = generateId()
+   contact.id = generateContactId()
    contacts.push(contact)
-   resp.json(contact)
+   resp.status(201).json(contact)
 })
 
 

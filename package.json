@@ -31,5 +31,6 @@
   "devDependencies": {
     "heroku": "^7.47.4",
     "shx": "^0.3.3"
-  }
+  },
+  "dependencies": {}
 }
