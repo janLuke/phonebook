@@ -2,40 +2,16 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 
-const yup = require('yup');
-const { expressYupMiddleware: yupMiddleware } = require('express-yup-middleware')
-
 const data = require('./data')
 const { generateContactId, forbidden } = require('./util')
-const { contactSchema } = require('./validation')
+const { 
+   validateContactData,
+   normalizeContactData,
+} = require('./validation')
 
 
 const PORT = process.env.PORT || 3001
 let contacts = data.contacts;
-
-const contactValidator = {
-   schema: {
-      body: {
-         yupSchema: contactSchema,
-      },
-      params: {
-         yupSchema: yup.object().shape({
-            id: yup.number().positive().integer(),
-         }),
-      },
-   },
-}
-
-const validateContact = (...propertiesToValidate) => yupMiddleware({
-   schemaValidator: contactValidator,
-   propertiesToValidate
-})
-
-const sanitizeContact = (req, resp, next) => {
-   req.body.name = req.body.name.trim()
-   req.body.phoneNumber = req.body.phoneNumber.trim()
-   next()
-}
 
 
 app = express()
@@ -59,45 +35,44 @@ app.get('/api/contacts', (req, resp) => {
    resp.json(contacts)
 })
 
+const injectContactIndexGivenId = (req, resp, next) => {
+   const id = parseInt(req.params.id)
+   req.params.id = id
+   let contactIndex = contacts.findIndex(c => c.id === id)
+   if (contactIndex < 0) {
+      return resp.status(404).json({
+         error: `contact ID not found: ${id}`
+      })
+   }
+   req.contactIndex = contactIndex
+   console.log(`Contaxt index for id ${id} is ${req.contactIndex}`);
+   next()
+}
+
 app.route('/api/contacts/:id')
-   .all(validateContact('params'), (req, resp, next) => {
-      const id = parseInt(req.params.id)
-      req.params.id = id
-      let contactIndex = contacts.findIndex(c => c.id === id)
-      console.log(contactIndex);
-      if (contactIndex < 0) {
-         return resp.status(404).end()
-      }
-      req.contactIndex = contactIndex
-      next()
-   })
+   .all(
+      validateContactData('params'), 
+      injectContactIndexGivenId,
+   )
    .get((req, resp) => {
       const contact = contacts[req.contactIndex]
-      if (contact != null)
-         resp.json(contact)
-      else
-         resp.status(404).end()
+      resp.json(contact)
    })
    .delete((req, resp) => {
       contacts.splice(req.contactIndex, 1)
       resp.status(204).end()
    })
-   .put([
-      validateContact('body'),
-      sanitizeContact
-   ], (req, resp) => {
+   .put((req, resp) => {
+      let data = normalizeContactData(req.body)
       let contact = contacts[req.contactIndex]
-      contact.name = req.body.name
-      contact.phoneNumber = req.body.phoneNumber
+      contact.name = data.name
+      contact.phoneNumber = data.phoneNumber
       resp.json(contact)
    })
 
 
-app.post('/api/contacts/', [
-   validateContact('body'),
-   sanitizeContact
-], (req, resp) => {
-   let contact = req.body;
+app.post('/api/contacts/', validateContactData('body'), (req, resp) => {
+   let contact = normalizeContactData(req.body);
 
    // Ensure the name doesn't already exist
    let lowerName = contact.name.toLowerCase()
