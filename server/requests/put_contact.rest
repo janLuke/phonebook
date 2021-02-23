@@ -1,0 +1,7 @@
+PUT http://localhost:3001/api/contacts/1 HTTP/1.1
+content-type: application/json
+
+{
+    "name": "PUT test",
+    "phoneNumber": "+39385944352"
+}
