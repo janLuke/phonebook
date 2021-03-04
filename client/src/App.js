@@ -15,6 +15,16 @@ function sortByName(contacts) {
    return contacts.sort((a, b) => a.name.localeCompare(b.name))
 }
 
+function isServerSideError(err) {
+   return ('response' in err) && ('data' in err.response.data);
+}
+
+function getErrorMessage(err) {
+   return isServerSideError(err)
+      ? err.response.data.message
+      : err.message;
+}
+
 export default function App() {
    const [state, setState] = useState("loading")
    const [contacts, setContacts] = useState([])
@@ -46,9 +56,8 @@ export default function App() {
          })
          .catch(err => {
             console.log(err)
-            toast.error(
-               'There was a problem sending the new contact to the server. ' +
-               'The contact could not be saved, sorry. Error: ' + err.message)
+            let message = getErrorMessage(err)
+            toast.error(`Failed to add "${newContactData.name}". Details:  ${message}`)
          })
    }
 
@@ -64,8 +73,7 @@ export default function App() {
          })
          .catch(err => {
             toast.error(
-               `There was a problem while trying to update "${modified.name}". ` +
-               "Details: " + err.message)
+               `Failed to update "${modified.name}". Details: ${getErrorMessage(err)}`)
          })
    }
 
@@ -81,12 +89,12 @@ export default function App() {
             let msg;
             if (err.response && err.response.status === 404) {
                fetchAllContacts()
-               msg = `It seems "${deleted.name}" had already been deleted. ` +
+               msg = `It seems "${deleted.name}" had already been deleted.` +
                   " You were using a stale tab, but now you're okay!"
             }
             else {
-               msg = `There was a problem while trying to delete "${deleted.name}". ` +
-                  "Details: " + err.message
+               let details = getErrorMessage(err);
+               msg = `Failed to delete "${deleted.name}". Details: ${details}`
             }
             toast.error(msg)
          })

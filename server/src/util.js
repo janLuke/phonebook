@@ -5,12 +5,6 @@ function httpError(status) {
 
 const forbidden = httpError(403)
 
-// FIXME: this is shit of course
-function generateContactId() {
-   return Math.round(Math.random() * Number.MAX_SAFE_INTEGER)
-}
-
 module.exports = {
-   forbidden,
-   generateContactId,
+   forbidden
 }
