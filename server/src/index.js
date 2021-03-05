@@ -103,7 +103,7 @@ app.route('/api/contacts/:id')
          let updated = await Contact.findByIdAndUpdate(
             { _id: req.params.id },
             contactData,
-            { new: true },
+            { new: true, runValidators: true, context: 'query' },
          )
          if (updated == null)
             throw contactNotFoundError(req.params.id)
