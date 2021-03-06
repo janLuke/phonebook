@@ -20,15 +20,6 @@ const findContactByName = (name, contacts) => {
    return contacts.find(contact => normalizeName(contact.name) === name)
 }
 
-const validatePartialPhoneNumber = (partialPhone) => {
-   partialPhone = partialPhone.trim();
-   if (!partialPhone)
-      return ''
-   if (!partialPhone.match(/^[+]?([0-9]+[- ]?)*$/))
-      return PHONE_FIELD_INSTRUCTIONs;
-   return '';
-}
-
 const validateName = (name, contacts, isNewName) => {
    name = normalizeName(name)
    if (!name)
@@ -38,13 +29,30 @@ const validateName = (name, contacts, isNewName) => {
    return '';
 }
 
+const countDigits = (str) => {
+   return str.replace(/\D/g, '').length
+}
+
+const validatePartialPhoneNumber = (partialPhone) => {
+   partialPhone = partialPhone.trim();
+   if (partialPhone.length > 20)
+      return 'Too long! Max 20 characters.'
+   if (!partialPhone)
+      return null
+   if (!partialPhone.match(/^[+]?([0-9]+[- ]?)*$/))
+      return PHONE_FIELD_INSTRUCTIONs;
+   return null;
+}
+
 const validatePhoneNumber = (phone) => {
    phone = phone.trim();
-   if (!phone)
-      return 'Empty phone number!'
+   if (phone.length > 20)
+      return 'Too long! Max 20 characters.'
+   if (countDigits(phone) < 8)
+      return 'Too short! Must contain at least 8 digits!'
    if (!phone.match(/^[+]?[0-9]+([ -][0-9]+)*$/))
       return PHONE_FIELD_INSTRUCTIONs
-   return '';
+   return null;
 }
 
 const InputFormField = ({ type, label, id, value, onChange, error, inputRef, ...props }) => (

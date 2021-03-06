@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 var uniqueValidator = require('mongoose-unique-validator');
 
+
 const contactSchema = new mongoose.Schema({
    name: {
       type: String,
@@ -15,6 +16,11 @@ const contactSchema = new mongoose.Schema({
       required: true,
       trim: true,
       match: /^[+-\d ]+$/,
+      maxLength: 20,
+      validate: {
+         validator: value => value.replace(/\D/g, '').length >= 8,
+         message: props => `a phone number must contain at least 8 digits!`
+      }
    }
 })
 

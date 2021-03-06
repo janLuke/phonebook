@@ -16,13 +16,18 @@ function sortByName(contacts) {
 }
 
 function isServerSideError(err) {
-   return ('response' in err) && ('data' in err.response.data);
+   return err.response && err.response.data;
 }
 
 function getErrorMessage(err) {
-   return isServerSideError(err)
-      ? err.response.data.message
-      : err.message;
+   if (isServerSideError(err)) {
+      let data = err.response.data;
+      if (data.message) 
+         return data.message;
+      if (data.errors && data.errors.length > 0)
+         return data.errors[0].message;
+   }
+   return err.message
 }
 
 export default function App() {
@@ -55,7 +60,7 @@ export default function App() {
             )
          })
          .catch(err => {
-            console.log(err)
+            console.error(err)
             let message = getErrorMessage(err)
             toast.error(`Failed to add "${newContactData.name}". Details:  ${message}`)
          })
@@ -69,9 +74,10 @@ export default function App() {
             let newContacts = replaceElem(contacts, index, updated)
             setContacts(sortByName(newContacts))
             toast.success(
-               `The number of "${updated.name}" was updated with success.`)
+               `The number of "${updated.name}" was successfully updated.`)
          })
          .catch(err => {
+            console.error(err)
             toast.error(
                `Failed to update "${modified.name}". Details: ${getErrorMessage(err)}`)
          })
@@ -82,7 +88,7 @@ export default function App() {
       api.deleteContact(id)
          .then(resp => {
             setContacts(contacts.filter(c => c.id !== id))  // preserve sorting
-            toast.success(`"${deleted.name}" was deleted with success.`)
+            toast.success(`"${deleted.name}" was successfully deleted.`)
          })
          .catch(err => {
             console.log(err)

@@ -11,7 +11,6 @@ const mongoose = require('mongoose')
 
 const Contact = require('./models/contact')
 const { ResourceNotFound } = require('./errors')
-const { findByIdAndUpdate } = require('./models/contact')
 
 
 const PORT = process.env.PORT || 3001
@@ -70,7 +69,6 @@ function entityLoader(model) {
 const loadContact = entityLoader(Contact)
 const contactNotFoundError = (id) => new ResourceNotFound(id, 'Contact')
 
-
 app.route('/api/contacts/:id')
    .get((req, resp, next) => {
       loadContact(req.params.id, { shouldExist: true })
@@ -82,36 +80,29 @@ app.route('/api/contacts/:id')
          .then(() => resp.status(204).end())
          .catch(next)
    })
-   .put(async (req, resp, next) => {
-      let contactData = req.body
-      try {
-         let updated = await Contact.findOneAndReplace(
-            { _id: req.params.id },
-            contactData,
-            { new: true }
-         )
-         if (updated == null)
-            throw contactNotFoundError(req.params.id)
-         return resp.json(updated)
-      } catch (err) {
-         next(err)
-      }
-   })
-   .patch(async (req, resp, next) => {
-      let contactData = req.body
-      try {
-         let updated = await Contact.findByIdAndUpdate(
-            { _id: req.params.id },
-            contactData,
-            { new: true, runValidators: true, context: 'query' },
-         )
-         if (updated == null)
-            throw contactNotFoundError(req.params.id)
-         resp.json(updated)
-      } catch (err) {
-         next(err)
-      }
-   })
+   .put(
+      (req, resp, next) => {
+         req.body = { name: req.body.name, phoneNumber: req.body.phoneNumber }
+         next()
+      },
+      updateContact)
+   .patch(updateContact)
+
+async function updateContact(req, resp, next) {
+   try {
+      let contactData = req.body;
+      let updated = await Contact.findByIdAndUpdate(
+         { _id: req.params.id },
+         contactData,
+         { new: true, runValidators: true, context: 'query' },
+      )
+      if (updated == null)
+         throw contactNotFoundError(req.params.id)
+      resp.json(updated)
+   } catch (err) {
+      next(err)
+   }
+}
 
 app.post('/api/contacts/', (req, resp, next) => {
    let contactData = req.body
@@ -134,8 +125,9 @@ app.use((err, req, resp, next) => {
          break;
 
       case 'ValidationError':
+         let errors = Object.values(err.errors).map(val => val.properties);
          data = {
-            status: 400, error: 'ValidationError', message: err.message,
+            status: 400, error: 'ValidationError', errors,
          }
          break;
    }
