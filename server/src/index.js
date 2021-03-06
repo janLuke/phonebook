@@ -16,12 +16,12 @@ const { ResourceNotFound } = require('./errors')
 const PORT = process.env.PORT || 3001
 
 
-app = express()
+let app = express()
 app.use(cors())
 app.use(express.json())
 
 // FIXME: remove the body from logging (it was asked by an exercise)
-morgan.token('body', (req, resp) => JSON.stringify(req.body))
+morgan.token('body', (req) => JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms - :body'))
 app.use(express.static('static'))
 
@@ -90,7 +90,7 @@ app.route('/api/contacts/:id')
 
 async function updateContact(req, resp, next) {
    try {
-      let contactData = req.body;
+      let contactData = req.body
       let updated = await Contact.findByIdAndUpdate(
          { _id: req.params.id },
          contactData,
@@ -115,31 +115,34 @@ app.post('/api/contacts/', (req, resp, next) => {
 // Error handler
 app.use((err, req, resp, next) => {
    console.log('obj', err)
-   let data;
+   let data = null
    switch (err.name) {
       case 'CastError':
          data = {
             status: 400, error: 'BadRequest',
             message: `invalid ${err.path}: ${err.value}`
          }
-         break;
+         break
 
-      case 'ValidationError':
-         let errors = Object.values(err.errors).map(val => val.properties);
+      case 'ValidationError': 
          data = {
-            status: 400, error: 'ValidationError', errors,
+            status: 400, error: 'ValidationError', 
+            errors: Object.values(err.errors).map(val => val.properties)
          }
-         break;
+         break
+
+      default:
+         if (err.status && err.status < 500)
+            data = {
+               status: err.status, error: err.name, message: err.message
+            }
    }
-   if (err.status && err.status < 500)
-      data = {
-         status: err.status, error: err.name, message: err.message
-      }
    if (data != null)
       return resp.status(data.status).json(data)
-   next(err)
+   else
+      next(err)
 })
 
 app.listen(PORT, () => {
-   console.log(`Server listening on port ${PORT}`);
+   console.log(`Server listening on port ${PORT}`)
 })
