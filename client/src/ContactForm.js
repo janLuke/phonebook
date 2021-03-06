@@ -15,44 +15,64 @@ const prettifyName = (name) => (
       .join(' ')
 )
 
+const checkMinLength = (field, value, minLen) => {
+   if (value.length < minLen)
+      throw new Error(`Too short! The ${field} must be at least ${minLen} characters long`)
+}
+
+const checkMaxLength = (field, value, maxLen) => {
+   if (value.length > maxLen)
+      throw new Error(`Too long! The ${field} must be at most ${maxLen} characters long`)
+}
+
 const findContactByName = (name, contacts) => {
    name = normalizeName(name);
    return contacts.find(contact => normalizeName(contact.name) === name)
 }
 
-const validateName = (name, contacts, isNewName) => {
+const checkNameDoesNotExist = (name, contacts) => {
+   if (findContactByName(name, contacts))
+      throw new Error('This name already exists in the phonebook!')
+}
+
+const validateName = (name, contacts, { exists_okay = true, isPartial = false } = {}) => {
    name = normalizeName(name)
-   if (!name)
-      return 'Empty name!'
-   if (isNewName && findContactByName(name, contacts))
-      return 'This name already exists in the phonebook!'
-   return '';
+   try {
+      if (!isPartial)
+         checkMinLength('name', name, 3)
+      checkMaxLength('name', name, 30)
+
+      if (!exists_okay)  // currently unused
+         checkNameDoesNotExist(name, contacts)
+   }
+   catch (err) {
+      return err.message
+   }
 }
 
 const countDigits = (str) => {
    return str.replace(/\D/g, '').length
 }
 
-const validatePartialPhoneNumber = (partialPhone) => {
-   partialPhone = partialPhone.trim();
-   if (partialPhone.length > 20)
-      return 'Too long! Max 20 characters.'
-   if (!partialPhone)
-      return null
-   if (!partialPhone.match(/^[+]?([0-9]+[- ]?)*$/))
-      return PHONE_FIELD_INSTRUCTIONs;
-   return null;
-}
-
-const validatePhoneNumber = (phone) => {
+const validatePhoneNumber = (phone, { isPartial = false } = {}) => {
+   const field = 'phone number'
    phone = phone.trim();
-   if (phone.length > 20)
-      return 'Too long! Max 20 characters.'
-   if (countDigits(phone) < 8)
-      return 'Too short! Must contain at least 8 digits!'
-   if (!phone.match(/^[+]?[0-9]+([ -][0-9]+)*$/))
-      return PHONE_FIELD_INSTRUCTIONs
-   return null;
+   try {
+      checkMaxLength(field, phone, 20)
+      if (isPartial) {
+         if (!phone.match(/^[+]?([0-9]+[- ]?)*$/))
+            return PHONE_FIELD_INSTRUCTIONs;
+      }
+      else {
+         if (countDigits(phone) < 8)
+            return 'Too short! Must contain at least 8 digits!'
+         if (!phone.match(/^[+]?[0-9]+([ -][0-9]+)*$/))
+            return PHONE_FIELD_INSTRUCTIONs
+      }
+   }
+   catch (err) {
+      return err.message
+   }
 }
 
 const InputFormField = ({ type, label, id, value, onChange, error, inputRef, ...props }) => (
@@ -86,28 +106,29 @@ export default function ContactForm({ contacts, onAddNew, onUpdate }) {
 
    const updateName = (event) => {
       let newName = event.target.value
+      let error = validateName(newName, contacts, { isPartial: true })
+      setNameError(error)
       setName(newName)
    }
 
    const updatePhone = (event) => {
       let newNumber = event.target.value
-      let error = validatePartialPhoneNumber(newNumber.trim())
+      let error = validatePhoneNumber(newNumber, { isPartial: true })
       setPhoneError(error)
       setPhone(newNumber)
    }
 
    const submit = (event) => {
       event.preventDefault()
-      let nameErr = validateName(name, contacts, !existingContact)
-      let phoneErr = validatePhoneNumber(phone.trim(), contacts)
+      let nameErr = validateName(name, contacts)
+      let phoneErr = validatePhoneNumber(phone, contacts)
       if (nameErr || phoneErr) {
          setNameError(nameErr)
          setPhoneError(phoneErr)
       }
       else {
-         if (existingContact) {
-            if (phone !== existingContact.phoneNumber)
-               onUpdate({ ...existingContact, phoneNumber: phone })
+         if (existingContact && (phone !== existingContact.phoneNumber)) {
+            onUpdate({ ...existingContact, phoneNumber: phone })
          }
          else {
             onAddNew({
