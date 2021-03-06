@@ -1,3 +1,8 @@
+/*
+ * CLI to interact with the phonebook MongoDB database.
+ */
+
+
 const mongoose = require('mongoose')
 
 const CLI_USAGE = 'Usage: node mongo.js <password> [<name> <phone-number>]\n'
