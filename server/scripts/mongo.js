@@ -2,7 +2,6 @@
  * CLI to interact with the phonebook MongoDB database.
  */
 
-
 const mongoose = require('mongoose')
 
 const CLI_USAGE = 'Usage: node mongo.js <password> [<name> <phone-number>]\n'
@@ -17,14 +16,16 @@ const Contact = mongoose.model('Contact', new mongoose.Schema({
    phoneNumber: String,
 }))
 
+class UsageError extends Error {}
+
 function parseArgs(argv) {
    const args = argv.slice(2)
 
    if (args.length == 0) {
-      throw 'Error: the password argument is required'
+      throw new UsageError('the password argument is required')
    }
    if (args.length != 1 && args.length != 3) {
-      throw 'Error: wrong number of arguments'
+      throw new UsageError('wrong number of arguments')
    }
 
    let password = args[0]
@@ -47,25 +48,18 @@ async function showContactList() {
    if (contactList.length === 0)
       console.log('* No contacts saved.')
    else {
-      for (contact of contactList)
+      for (let contact of contactList)
          console.log(`* ${contact.name}, ${contact.phoneNumber}`)
    }
 }
 
 async function main() {
-   // Parse CLI arguments
    try {
-      args = parseArgs(process.argv)
-   } catch (err) {
-      console.log(CLI_USAGE)
-      console.log(err)
-      process.exit(1)
-   }
-   const { password, contactData } = args;
+      // Parse CLI arguments
+      const { password, contactData } = parseArgs(process.argv)
 
-   // Connect to the database
-   const db_uri = getDatabaseURI(DB_NAME, password)
-   try {
+      // Connect to the database
+      const db_uri = getDatabaseURI(DB_NAME, password)
       await mongoose.connect(db_uri, {
          useNewUrlParser: true,
          useUnifiedTopology: true,
@@ -73,23 +67,21 @@ async function main() {
          useCreateIndex: true,
       })
       console.log('Successfully connected to database!')
-   }
-   catch (err) {
-      console.log(err.toString())
-      process.exit(1)
-   }
-
-   try {
+      
+      // Perform the requested action
       if (contactData != null)
          await saveContact(contactData)
       else
-         await showContactList();
-   }
+         await showContactList()
+   } 
    catch (err) {
-      console.log('Error: ' + err)
+      console.log(CLI_USAGE)
+      console.log('Error: ' + err.message)
+      process.exitCode = 1
    }
-
-   mongoose.connection.close()
+   finally {
+      mongoose.connection.close()
+   }
 }
 
 
